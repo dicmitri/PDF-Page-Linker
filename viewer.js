@@ -246,6 +246,7 @@ async function renderPage(record, token) {
       viewport
     });
     await record.textLayerInstance.render();
+    normalizeTextLayerReadingOrder(record.textLayer);
 
     if (token === state.renderToken) {
       record.rendered = true;
@@ -572,6 +573,111 @@ function setStatus(message) {
 
 function updateZoomValue() {
   elements.zoomValue.textContent = `${Math.round(state.scale * 100)}%`;
+}
+
+function normalizeTextLayerReadingOrder(textLayer) {
+  const spans = Array.from(textLayer.querySelectorAll("span")).filter(span => {
+    return !span.classList.contains("markedContent") && span.textContent && span.getClientRects().length > 0;
+  });
+
+  if (spans.length < 2) {
+    return;
+  }
+
+  const layerRect = textLayer.getBoundingClientRect();
+  const items = spans.map(span => {
+    const rect = span.getBoundingClientRect();
+    return {
+      element: span,
+      left: rect.left - layerRect.left,
+      right: rect.right - layerRect.left,
+      top: rect.top - layerRect.top,
+      bottom: rect.bottom - layerRect.top,
+      centerY: rect.top + rect.height / 2,
+      height: rect.height
+    };
+  });
+  const lines = groupTextItemsIntoLines(items, layerRect.width);
+  const splitX = detectColumnSplit(lines, layerRect.width);
+
+  for (const line of lines) {
+    line.column = splitX && line.left >= splitX ? 1 : 0;
+    for (const item of line.items) {
+      item.line = line;
+    }
+  }
+
+  items.sort((first, second) => {
+    return first.line.column - second.line.column ||
+      first.line.top - second.line.top ||
+      first.left - second.left;
+  });
+
+  const fragment = document.createDocumentFragment();
+  for (const item of items) {
+    fragment.append(item.element);
+  }
+  textLayer.append(fragment);
+}
+
+function groupTextItemsIntoLines(items, layerWidth) {
+  const lines = [];
+  const sorted = [...items].sort((first, second) => first.centerY - second.centerY || first.left - second.left);
+
+  for (const item of sorted) {
+    const last = lines.at(-1);
+    const tolerance = Math.max(4, item.height * 0.45);
+    const columnGap = Math.max(72, layerWidth * 0.08);
+
+    if (last && Math.abs(item.centerY - last.centerY) <= tolerance && item.left - last.right <= columnGap) {
+      last.items.push(item);
+      last.centerY = average(last.items.map(entry => entry.centerY));
+      last.top = Math.min(last.top, item.top);
+      last.bottom = Math.max(last.bottom, item.bottom);
+      last.left = Math.min(last.left, item.left);
+      last.right = Math.max(last.right, item.right);
+    } else {
+      lines.push({
+        items: [item],
+        centerY: item.centerY,
+        top: item.top,
+        bottom: item.bottom,
+        left: item.left,
+        right: item.right,
+        column: 0
+      });
+    }
+  }
+
+  return lines.map(line => ({
+    ...line,
+    width: line.right - line.left
+  }));
+}
+
+function detectColumnSplit(lines, layerWidth) {
+  const narrowLines = lines.filter(line => line.width > 24 && line.width < layerWidth * 0.72);
+  const lefts = [...new Set(narrowLines.map(line => Math.round(line.left / 8) * 8))].sort((first, second) => first - second);
+
+  if (lefts.length < 2) {
+    return 0;
+  }
+
+  let largestGap = 0;
+  let splitX = 0;
+  for (let index = 1; index < lefts.length; index += 1) {
+    const gap = lefts[index] - lefts[index - 1];
+    if (gap > largestGap) {
+      largestGap = gap;
+      splitX = (lefts[index] + lefts[index - 1]) / 2;
+    }
+  }
+
+  return largestGap >= Math.max(120, layerWidth * 0.16) ? splitX : 0;
+}
+
+function average(values) {
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
 function showError(error) {

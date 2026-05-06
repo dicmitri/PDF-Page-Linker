@@ -311,6 +311,8 @@ input:focus-visible {
   text-align: initial;
   forced-color-adjust: none;
   transform-origin: 0 0;
+  cursor: text;
+  user-select: text;
 }
 
 .textLayer span,
@@ -320,6 +322,7 @@ input:focus-visible {
   white-space: pre;
   cursor: text;
   transform-origin: 0 0;
+  user-select: text;
 }
 
 .textLayer span.markedContent {

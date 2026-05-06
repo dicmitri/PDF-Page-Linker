@@ -24,6 +24,7 @@ function createHistoryItem(item) {
   const details = document.createElement("div");
   const title = document.createElement("div");
   const meta = document.createElement("div");
+  const time = document.createElement("time");
   const actions = document.createElement("div");
   const copyButton = document.createElement("button");
   const deleteButton = document.createElement("button");
@@ -32,10 +33,13 @@ function createHistoryItem(item) {
   details.className = "history-details";
   title.className = "history-title";
   meta.className = "history-meta";
+  time.className = "history-time";
   actions.className = "history-actions";
 
   title.textContent = `${item.filename || "document.pdf"} - page ${item.pageNumber}`;
-  meta.textContent = `${sourceHint(item.pdfUrl)} - ${formatTimestamp(item.copiedAt)}`;
+  meta.textContent = sourceHint(item.pdfUrl);
+  time.textContent = formatTimestamp(item.copiedAt);
+  time.dateTime = item.copiedAt || "";
 
   copyButton.type = "button";
   copyButton.className = "copy-button";
@@ -56,7 +60,7 @@ function createHistoryItem(item) {
     await renderHistory();
   });
 
-  details.append(title, meta);
+  details.append(title, meta, time);
   actions.append(copyButton, deleteButton);
   row.append(details, actions);
   return row;
@@ -90,9 +94,7 @@ function formatTimestamp(value) {
   }
 
   return new Intl.DateTimeFormat(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit"
+    dateStyle: "medium",
+    timeStyle: "medium"
   }).format(date);
 }
