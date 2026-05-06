@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "PDF Page Link Viewer",
+  "short_name": "PDF Links",
+  "version": "0.1.0",
+  "description": "A clean PDF.js viewer that copies direct links to the current PDF page.",
+  "minimum_chrome_version": "128",
+  "permissions": [
+    "declarativeNetRequest",
+    "downloads",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "PDF link history",
+    "default_popup": "popup.html"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; worker-src 'self';"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "viewer.html",
+        "viewer.css",
+        "viewer.js",
+        "pdfjs/build/*",
+        "pdfjs/cmaps/*",
+        "pdfjs/iccs/*",
+        "pdfjs/standard_fonts/*",
+        "pdfjs/wasm/*"
+      ],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ]
+    }
+  ]
+}

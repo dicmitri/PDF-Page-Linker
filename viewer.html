@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PDF Viewer</title>
+    <link rel="stylesheet" href="viewer.css">
+  </head>
+  <body>
+    <header class="toolbar" aria-label="PDF controls">
+      <div class="toolbar-leading">
+        <button id="toggleSidebar" class="icon-button" type="button" title="Toggle navigation" aria-label="Toggle navigation" aria-pressed="true">☰</button>
+        <div id="fileName" class="file-name" title="PDF document">PDF document</div>
+      </div>
+
+      <div class="toolbar-group">
+        <button id="prevPage" class="icon-button" type="button" title="Previous page" aria-label="Previous page">&lt;</button>
+        <button id="nextPage" class="icon-button" type="button" title="Next page" aria-label="Next page">&gt;</button>
+      </div>
+
+      <div class="page-control" aria-label="Page navigation">
+        <input id="pageNumber" type="number" min="1" value="1" aria-label="Current page">
+        <span id="pageTotal" class="page-total">/ -</span>
+      </div>
+
+      <div class="toolbar-spacer"></div>
+
+      <div class="toolbar-group">
+        <button id="zoomOut" class="icon-button" type="button" title="Zoom out" aria-label="Zoom out">-</button>
+        <div id="zoomValue" class="zoom-value" aria-label="Zoom level">100%</div>
+        <button id="zoomIn" class="icon-button" type="button" title="Zoom in" aria-label="Zoom in">+</button>
+        <button id="fitWidth" class="text-button" type="button" title="Fit width">Fit</button>
+      </div>
+
+      <div class="toolbar-group">
+        <button id="downloadPdf" class="text-button" type="button" title="Download PDF">Download</button>
+        <button id="copyLink" class="primary-button" type="button" title="Copy link to this page">Link this page</button>
+      </div>
+    </header>
+
+    <main id="appShell" class="app-shell">
+      <aside id="sidebar" class="sidebar" aria-label="Page navigation">
+        <div id="thumbnails" class="thumbnails"></div>
+      </aside>
+
+      <section id="viewerFrame" class="viewer-frame" aria-label="PDF document">
+        <div id="status" class="status">Loading PDF...</div>
+        <div id="pages" class="pages" aria-label="PDF pages"></div>
+      </section>
+    </main>
+
+    <script type="module" src="viewer.js"></script>
+  </body>
+</html>
