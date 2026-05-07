@@ -8,7 +8,8 @@
   "permissions": [
     "declarativeNetRequest",
     "downloads",
-    "storage"
+    "storage",
+    "tabs"
   ],
   "host_permissions": [
     "http://*/*",

@@ -11,6 +11,7 @@ const MAX_HISTORY_ITEMS = 200;
 const MIN_SCALE = 0.25;
 const MAX_SCALE = 4;
 const ZOOM_STEP = 1.15;
+const DEFAULT_SCALE = 2;
 
 GlobalWorkerOptions.workerSrc = chrome.runtime.getURL("pdfjs/build/pdf.worker.mjs");
 
@@ -103,7 +104,7 @@ async function loadPdf() {
   elements.pageNumber.max = String(state.pdf.numPages);
 
   await createPageShells();
-  applyFitWidth();
+  setScale(DEFAULT_SCALE, false, { preservePage: false });
   setupLazyRendering();
   setupThumbnailRendering();
   setStatus("");
@@ -219,6 +220,7 @@ async function renderPage(record, token) {
 
   record.element.style.width = `${viewport.width}px`;
   record.element.style.height = `${viewport.height}px`;
+  record.element.style.setProperty("--total-scale-factor", state.scale);
   record.canvas.style.width = `${viewport.width}px`;
   record.canvas.style.height = `${viewport.height}px`;
   record.canvas.width = Math.floor(viewport.width * outputScale);
@@ -246,7 +248,7 @@ async function renderPage(record, token) {
       viewport
     });
     await record.textLayerInstance.render();
-    normalizeTextLayerReadingOrder(record.textLayer);
+    installTextSelectionStabilizer(record.textLayer);
 
     if (token === state.renderToken) {
       record.rendered = true;
@@ -375,7 +377,8 @@ function bindControls() {
   });
 }
 
-function setScale(nextScale, fitWidth) {
+function setScale(nextScale, fitWidth, options = {}) {
+  const { preservePage = true } = options;
   const currentPage = state.currentPage;
   const scale = clamp(nextScale, MIN_SCALE, MAX_SCALE);
   if (Math.abs(scale - state.scale) < 0.001 && fitWidth === state.fitWidth) {
@@ -387,7 +390,9 @@ function setScale(nextScale, fitWidth) {
   elements.fitWidth.classList.toggle("active", fitWidth);
   updateZoomValue();
   resetRenderedPages();
-  scrollToPage(currentPage, "auto");
+  if (preservePage && state.pages.length) {
+    scrollToPage(currentPage, "auto");
+  }
   window.requestAnimationFrame(renderVisiblePages);
 }
 
@@ -420,6 +425,7 @@ function resetRenderedPages() {
     const height = record.height * state.scale;
     record.element.style.width = `${width}px`;
     record.element.style.height = `${height}px`;
+    record.element.style.setProperty("--total-scale-factor", state.scale);
   }
 }
 
@@ -513,12 +519,19 @@ async function saveHistoryItem(link) {
 
 function showCopiedFeedback() {
   window.clearTimeout(state.feedbackTimer);
-  elements.copyLink.textContent = "Copied!";
+  setCopyLinkLabel("Copied!");
   elements.copyLink.classList.add("copied");
   state.feedbackTimer = window.setTimeout(() => {
-    elements.copyLink.textContent = "Link this page";
+    setCopyLinkLabel("Link this page");
     elements.copyLink.classList.remove("copied");
   }, 1500);
+}
+
+function setCopyLinkLabel(label) {
+  const labelElement = elements.copyLink.querySelector("span");
+  if (labelElement) {
+    labelElement.textContent = label;
+  }
 }
 
 function pageLinkFor(pageNumber) {
@@ -575,109 +588,17 @@ function updateZoomValue() {
   elements.zoomValue.textContent = `${Math.round(state.scale * 100)}%`;
 }
 
-function normalizeTextLayerReadingOrder(textLayer) {
-  const spans = Array.from(textLayer.querySelectorAll("span")).filter(span => {
-    return !span.classList.contains("markedContent") && span.textContent && span.getClientRects().length > 0;
+function installTextSelectionStabilizer(textLayer) {
+  const endOfContent = document.createElement("div");
+  endOfContent.className = "endOfContent";
+  textLayer.append(endOfContent);
+
+  textLayer.addEventListener("mousedown", () => {
+    endOfContent.classList.add("active");
+    document.addEventListener("mouseup", () => {
+      endOfContent.classList.remove("active");
+    }, { once: true });
   });
-
-  if (spans.length < 2) {
-    return;
-  }
-
-  const layerRect = textLayer.getBoundingClientRect();
-  const items = spans.map(span => {
-    const rect = span.getBoundingClientRect();
-    return {
-      element: span,
-      left: rect.left - layerRect.left,
-      right: rect.right - layerRect.left,
-      top: rect.top - layerRect.top,
-      bottom: rect.bottom - layerRect.top,
-      centerY: rect.top + rect.height / 2,
-      height: rect.height
-    };
-  });
-  const lines = groupTextItemsIntoLines(items, layerRect.width);
-  const splitX = detectColumnSplit(lines, layerRect.width);
-
-  for (const line of lines) {
-    line.column = splitX && line.left >= splitX ? 1 : 0;
-    for (const item of line.items) {
-      item.line = line;
-    }
-  }
-
-  items.sort((first, second) => {
-    return first.line.column - second.line.column ||
-      first.line.top - second.line.top ||
-      first.left - second.left;
-  });
-
-  const fragment = document.createDocumentFragment();
-  for (const item of items) {
-    fragment.append(item.element);
-  }
-  textLayer.append(fragment);
-}
-
-function groupTextItemsIntoLines(items, layerWidth) {
-  const lines = [];
-  const sorted = [...items].sort((first, second) => first.centerY - second.centerY || first.left - second.left);
-
-  for (const item of sorted) {
-    const last = lines.at(-1);
-    const tolerance = Math.max(4, item.height * 0.45);
-    const columnGap = Math.max(72, layerWidth * 0.08);
-
-    if (last && Math.abs(item.centerY - last.centerY) <= tolerance && item.left - last.right <= columnGap) {
-      last.items.push(item);
-      last.centerY = average(last.items.map(entry => entry.centerY));
-      last.top = Math.min(last.top, item.top);
-      last.bottom = Math.max(last.bottom, item.bottom);
-      last.left = Math.min(last.left, item.left);
-      last.right = Math.max(last.right, item.right);
-    } else {
-      lines.push({
-        items: [item],
-        centerY: item.centerY,
-        top: item.top,
-        bottom: item.bottom,
-        left: item.left,
-        right: item.right,
-        column: 0
-      });
-    }
-  }
-
-  return lines.map(line => ({
-    ...line,
-    width: line.right - line.left
-  }));
-}
-
-function detectColumnSplit(lines, layerWidth) {
-  const narrowLines = lines.filter(line => line.width > 24 && line.width < layerWidth * 0.72);
-  const lefts = [...new Set(narrowLines.map(line => Math.round(line.left / 8) * 8))].sort((first, second) => first - second);
-
-  if (lefts.length < 2) {
-    return 0;
-  }
-
-  let largestGap = 0;
-  let splitX = 0;
-  for (let index = 1; index < lefts.length; index += 1) {
-    const gap = lefts[index] - lefts[index - 1];
-    if (gap > largestGap) {
-      largestGap = gap;
-      splitX = (lefts[index] + lefts[index - 1]) / 2;
-    }
-  }
-
-  return largestGap >= Math.max(120, layerWidth * 0.16) ? splitX : 0;
-}
-
-function average(values) {
-  return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
 function showError(error) {

@@ -18,3 +18,9 @@ A lightweight Manifest V3 Chrome extension that replaces web-served PDFs with a 
 4. Open an `http` or `https` PDF URL.
 
 Local files are intentionally out of scope for this version.
+
+## Notices
+
+This extension bundles PDF.js by Mozilla as its PDF rendering engine. See `THIRD_PARTY_NOTICES.md` and `pdfjs/LICENSE` for attribution and license details.
+
+History is stored locally in `chrome.storage.local`. See `PRIVACY.md` for the stored fields and privacy behavior.

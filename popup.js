@@ -26,6 +26,7 @@ function createHistoryItem(item) {
   const meta = document.createElement("div");
   const time = document.createElement("time");
   const actions = document.createElement("div");
+  const visitButton = document.createElement("button");
   const copyButton = document.createElement("button");
   const deleteButton = document.createElement("button");
 
@@ -37,9 +38,17 @@ function createHistoryItem(item) {
   actions.className = "history-actions";
 
   title.textContent = `${item.filename || "document.pdf"} - page ${item.pageNumber}`;
-  meta.textContent = sourceHint(item.pdfUrl);
+  meta.textContent = item.link || item.pdfUrl || "";
+  meta.title = item.link || item.pdfUrl || "";
   time.textContent = formatTimestamp(item.copiedAt);
   time.dateTime = item.copiedAt || "";
+
+  visitButton.type = "button";
+  visitButton.className = "visit-button";
+  visitButton.textContent = "Visit";
+  visitButton.addEventListener("click", () => {
+    chrome.tabs.create({ url: item.link });
+  });
 
   copyButton.type = "button";
   copyButton.className = "copy-button";
@@ -61,7 +70,7 @@ function createHistoryItem(item) {
   });
 
   details.append(title, meta, time);
-  actions.append(copyButton, deleteButton);
+  actions.append(visitButton, copyButton, deleteButton);
   row.append(details, actions);
   return row;
 }
@@ -76,15 +85,6 @@ async function deleteHistoryItem(id) {
   await chrome.storage.local.set({
     [HISTORY_KEY]: history.filter(item => item.id !== id)
   });
-}
-
-function sourceHint(url) {
-  try {
-    const parsed = new URL(url);
-    return `${parsed.hostname}${parsed.pathname}`;
-  } catch {
-    return url || "Unknown source";
-  }
 }
 
 function formatTimestamp(value) {
