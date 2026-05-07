@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "PDF Page Linker",
   "short_name": "PDF Linker",
-  "version": "0.1.0",
-  "description": "A clean PDF.js viewer that copies direct links to the current PDF page.",
+  "version": "1.0.0",
+  "description": "A clean PDF viewer that copies direct links to the current PDF page.",
   "minimum_chrome_version": "128",
   "permissions": [
     "declarativeNetRequest",

@@ -1,6 +1,6 @@
-# PDF Page Link Viewer
+<# PDF Page Linker
 
-A lightweight Manifest V3 Chrome extension that replaces web-served PDFs with a clean PDF.js viewer. It keeps PDF text selectable and adds one-click copying for links to the current page.
+A Chrome extension that opens web-served PDFs with a clean PDF instead of the Chrome default one. It keeps the basic core functionalities of the default viewer and adds one-click copying for links to the current page.
 
 ## Features
 
@@ -24,3 +24,4 @@ Local files are intentionally out of scope for this version.
 This extension bundles PDF.js by Mozilla as its PDF rendering engine. See `THIRD_PARTY_NOTICES.md` and `pdfjs/LICENSE` for attribution and license details.
 
 History is stored locally in `chrome.storage.local`. See `PRIVACY.md` for the stored fields and privacy behavior.
+>
