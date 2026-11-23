@@ -31,18 +31,29 @@ async function handle(message) {
       return locate(message.url, message.selection, onProgress);
     }
     case "copy":
-      return { ok: copyText(message.text) };
+      return { ok: copyClip(message.text, message.html) };
     default:
       throw new Error(`Unknown request: ${message.type}`);
   }
 }
 
-// MV3 service workers have no clipboard; an offscreen document can use execCommand.
-function copyText(text) {
+// MV3 service workers have no clipboard; an offscreen document can use
+// execCommand("copy") (allowed by the clipboardWrite permission). The copy
+// event sets plain text and, for quotes, rich text.
+function copyClip(text, html) {
+  const onCopy = event => {
+    event.clipboardData.setData("text/plain", text);
+    if (html) {
+      event.clipboardData.setData("text/html", html);
+    }
+    event.preventDefault();
+  };
   const textarea = document.getElementById("clipboard");
   textarea.value = text;
   textarea.select();
+  document.addEventListener("copy", onCopy);
   const ok = document.execCommand("copy");
+  document.removeEventListener("copy", onCopy);
   textarea.value = "";
   return ok;
 }

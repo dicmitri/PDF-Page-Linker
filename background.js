@@ -248,40 +248,18 @@ async function copyAndRemember(record, link, page, tabId, quote = record.selecti
   return Boolean(ok);
 }
 
-// Copy without the clipboardWrite permission (which adds an install warning):
-// write from the tab itself, which `activeTab` + `scripting` allow.
-async function writeClipboard(tabId, { text, html }) {
-  if (tabId !== undefined) {
-    try {
-      const [injection] = await chrome.scripting.executeScript({
-        target: { tabId },
-        args: [text, html || ""],
-        func: async (plain, rich) => {
-          try {
-            if (rich) {
-              await navigator.clipboard.write([new ClipboardItem({
-                "text/plain": new Blob([plain], { type: "text/plain" }),
-                "text/html": new Blob([rich], { type: "text/html" })
-              })]);
-            } else {
-              await navigator.clipboard.writeText(plain);
-            }
-            return true;
-          } catch {
-            return false;
-          }
-        }
-      });
-      if (injection?.result === true) {
-        return true;
-      }
-    } catch {
-      // Not scriptable (e.g. chrome:// pages); try the offscreen document.
-    }
+// Copy from the offscreen document, which the clipboardWrite permission allows
+// without focus or a user gesture. Writing from the page instead makes Chrome
+// ask the *website* for clipboard access ("example.org wants to see text and
+// images copied to the clipboard"), which is confusing and blocks the copy.
+async function writeClipboard(_tabId, { text, html }) {
+  try {
+    await ensureOffscreen();
+    const { ok } = await sendToOffscreen({ type: "copy", text, html: html || "" });
+    return Boolean(ok);
+  } catch {
+    return false;
   }
-  // Last resort: plain text from the offscreen document.
-  const { ok } = await sendToOffscreen({ type: "copy", text }).catch(() => ({ ok: false }));
-  return Boolean(ok);
 }
 
 async function saveLastResult(record) {

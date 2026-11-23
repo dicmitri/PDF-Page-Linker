@@ -54,8 +54,9 @@
 - **Permission justifications**:
   - `contextMenus`: adds "Copy link to this page / passage" and "Copy quote with link" to the right-click menu on selected text.
   - `activeTab`: after the user clicks one of those items or presses the extension's keyboard shortcut, temporarily allows downloading the PDF open in that tab to find which page the selected text is on.
-  - `offscreen`: runs PDF.js text extraction (which needs a document and a Web Worker) and is a fallback for writing to the clipboard.
-  - `scripting`: copies the generated link to the clipboard from the active tab, and reads the selected text when the user presses the keyboard shortcut.
+  - `offscreen`: runs PDF.js text extraction (which needs a document and a Web Worker) and writes the generated link to the clipboard.
+  - `clipboardWrite`: copies the generated link, or the quote with its link, to the clipboard. Writing from the web page instead would make Chrome show the website asking for clipboard access.
+  - `scripting`: reads the selected text from the active tab when the user presses the keyboard shortcut (Chrome passes the selection to context-menu clicks but not to shortcuts).
   - `storage`: keeps the user's link history locally.
   - No host permissions are requested.
 - **Remote code**: none; all code, including PDF.js, is bundled.
@@ -74,10 +75,11 @@
 ## Updating from v1
 
 v2 removes `declarativeNetRequest`, `downloads`, `tabs` and the `http(s)://*/*`
-host permissions. Its new permissions show no install warnings
-(`chrome.management.getPermissionWarningsByManifest` returns none), so existing
-users should not be asked to re-approve the update. Their v1 link history stays
-visible in the popup (same storage key).
+host permissions. It adds `clipboardWrite`, whose warning ("Modify data you
+copy and paste") v1 didn't have, so Chrome will ask existing users to accept it
+and disables the extension until they do (Google: "When an update requires
+additional permissions, users will be prompted to accept them or disable the
+extension"). Their v1 link history stays visible in the popup (same storage key).
 
 ## Pre-submission checks
 

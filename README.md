@@ -82,9 +82,8 @@ Only PDFs opened over `http`/`https` are supported.
 4. Passage links use the words from Chrome's own selection, so Chrome will find
    them. The PDF text is used to check they are unique, and to add surrounding
    words (`prefix-,` / `,-suffix`) when they aren't.
-5. The link is copied by a script injected into the tab (as rich text plus
-   plain text for quotes). If that isn't possible, the popup shows it with a
-   **Copy** button.
+5. The offscreen document copies the link (as rich text plus plain text for
+   quotes). If that fails, the popup shows the link with a **Copy** button.
 
 The keyboard shortcut works the same way, but Chrome doesn't hand a shortcut
 the selected text, so the extension asks Chrome's PDF viewer for it through
@@ -101,15 +100,21 @@ same PDF are instant.
 |---|---|
 | `contextMenus` | The right-click items |
 | `activeTab` | Download the PDF you're linking into, only after you click an item or press the shortcut |
-| `offscreen` | Run PDF.js (it needs a document and a worker) |
-| `scripting` | Write the link to the clipboard from the tab; read the selection when you press the shortcut |
+| `offscreen` | Run PDF.js (it needs a document and a worker) and write the clipboard |
+| `clipboardWrite` | Copy the link (or quote) to the clipboard |
+| `scripting` | Read the selected text when you press the shortcut |
 | `storage` | Keep the link history on your device |
 
 The keyboard shortcut (`commands` in the manifest) needs no permission.
 
-There are no host permissions, and Chrome shows no permission warnings when
-installing (checked with `chrome.management.getPermissionWarningsByManifest`).
-See [PRIVACY.html](PRIVACY.html) for what is stored.
+There are no host permissions. The only install warning is "Modify data you
+copy and paste", from `clipboardWrite` (checked with
+`chrome.management.getPermissionWarningsByManifest`). Without that permission
+the copy has to happen inside the web page, and on real sites Chrome then makes
+the *website* ask for clipboard access ("example.org wants to see text and
+images copied to the clipboard") and holds the copy until you answer. That
+prompt is confusing and blames the site, so the extension copies from its own
+hidden page instead. See [PRIVACY.html](PRIVACY.html) for what is stored.
 
 ## Project layout
 
