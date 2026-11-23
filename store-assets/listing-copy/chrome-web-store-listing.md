@@ -42,7 +42,7 @@ What existing v1 users will see:
 
 | Field | Value |
 |---|---|
-| Package | `dist/pdf-page-linker-2.0.0.zip`, built with `mkdir -p dist && git archive --format=zip --output=dist/pdf-page-linker-2.0.0.zip HEAD` from the merged commit |
+| Package | `dist/pdf-page-linker-2.0.0.zip`, built with `./package.sh` from the merged commit |
 | Version | 2.0.0 (from `manifest.json`) |
 
 ---
@@ -188,16 +188,14 @@ file anywhere public.
 
 ## Test instructions (for reviewers)
 
-No account or login is needed. Paste into the test instructions field:
+The field allows 500 characters; this is 479. Paste:
 ```
-No login required.
-1. Open a public PDF in Chrome, e.g. https://arxiv.org/pdf/1706.03762
-2. Select a sentence on any page, right-click, open "PDF Page and Passage Links" and choose "Copy link to this passage". The toolbar badge shows the detected page number.
-3. Paste the copied link into a new tab: the PDF opens on that page with the passage highlighted.
-4. "Copy link to this page" copies a #page=N link. "Copy quote with link" copies the quote plus link as rich text (paste it into an email or document).
-5. Select the words "positional encoding" (they appear on pages 6, 8 and 9) and choose "Copy link to this page": the popup shows each place in context and asks which page you meant. A very common word such as "attention" asks for a longer selection instead.
-6. Alt+Shift+L with text selected copies a passage link. The toolbar popup shows recent links and lets you link to a page by number.
-The extension only works in PDFs opened over http/https; on normal web pages it says it isn't a PDF.
+No login needed.
+1. Open https://arxiv.org/pdf/1706.03762 in Chrome.
+2. Select a sentence, right-click > PDF Page and Passage Links > Copy link to this passage. The badge shows the page.
+3. Paste the link in a new tab: it opens on that page, passage highlighted.
+4. Select "positional encoding" > Copy link to this page: the popup asks which page (6, 8 or 9).
+5. Copy quote with link pastes a linked quote. Alt+Shift+L copies a passage link. The toolbar popup lists recent links.
 ```
 
 ---

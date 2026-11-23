@@ -130,6 +130,7 @@ hidden page instead. See [PRIVACY.html](PRIVACY.html) for what is stored.
 | `history.js` | Link history in `chrome.storage.local` |
 | `icons/` | Toolbar and store icons; `mark.svg` is the popup header mark |
 | `pdfjs/` | PDF.js 5.6.205 core library and character maps (see notices) |
+| `package.sh` | Builds the Chrome Web Store ZIP |
 | `tests/` | Unit tests and the real-browser accuracy test |
 | `store-assets/` | Chrome Web Store images and the logo's SVG sources (not part of the package) |
 
@@ -153,11 +154,11 @@ generated passage links to check where Chrome lands. Latest result (Chromium
 ## Packaging for the Chrome Web Store
 
 ```sh
-mkdir -p dist && git archive --format=zip --output=dist/pdf-page-linker-2.0.0.zip HEAD
+./package.sh    # -> dist/pdf-page-linker-<version>.zip, built from the last commit
 ```
 
-`.gitattributes` keeps tests, docs and store assets out of the archive. See
-[submission.md](submission.md) for the store checklist.
+The ZIP contains only the extension's runtime files; tests, docs and store
+assets stay out. See [submission.md](submission.md) for the store checklist.
 
 ## Known limitations
 
