@@ -47,8 +47,9 @@
 
     <h2>What the extension reads</h2>
     <p>
-      Only when you choose one of its items from the right-click menu, the
-      extension receives the text you selected and the address of the PDF. To
+      Only when you choose one of its items from the right-click menu, or press
+      its keyboard shortcut, the extension receives the text you selected and
+      the address of the PDF. To
       find which page that text is on, it downloads that same PDF from the
       website you are viewing, just as your browser did to display it, and
       extracts the PDF's text on your device. The download uses your browser's
@@ -71,7 +72,7 @@
       <li>the page number;</li>
       <li>the copied link;</li>
       <li>the date and time you copied it;</li>
-      <li>for passage links, the selected text (up to 240 characters).</li>
+      <li>for passage and quote links, the selected text (up to 240 characters).</li>
     </ul>
     <p>
       The result of the most recent right-click, including the selected text, is
@@ -95,9 +96,9 @@
     <h2>Permissions</h2>
     <ul>
       <li><strong>contextMenus</strong>: show the right-click items.</li>
-      <li><strong>activeTab</strong>: temporary access to the current tab's website, granted only when you click one of the extension's items, used to download the PDF.</li>
+      <li><strong>activeTab</strong>: temporary access to the current tab's website, granted only when you click one of the extension's items or press its shortcut, used to download the PDF.</li>
       <li><strong>offscreen</strong>: run the PDF text extraction in a hidden extension page.</li>
-      <li><strong>scripting</strong>: copy the link to your clipboard from the current tab.</li>
+      <li><strong>scripting</strong>: copy the link to your clipboard from the current tab, and read the selected text when you press the keyboard shortcut.</li>
       <li><strong>storage</strong>: keep your link history on your device.</li>
     </ul>
 

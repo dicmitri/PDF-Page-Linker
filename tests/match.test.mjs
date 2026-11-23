@@ -131,3 +131,11 @@ test("long passages use textStart,textEnd", () => {
   assert.equal(result.status, "found");
   assert.equal(result.candidates[0].directive, "text=Energy%20is%20given,by%20Einstein%20in%201905.");
 });
+
+test("quotes complete words the selection cut in half", () => {
+  const result = locateInIndex(doc, "duction to the meth");
+  assert.equal(result.candidates[0].quote, "Introduction to the method");
+  const index = indexFromPageTexts(["For the pre-training corpus we use books."]);
+  assert.equal(locateInIndex(index, "For the pre-trai").candidates[0].quote, "For the pre-training");
+  assert.equal(locateInIndex(index, "training corp").candidates[0].quote, "training corpus");
+});

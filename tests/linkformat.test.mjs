@@ -6,6 +6,7 @@ import {
   encodeTextTerm,
   fallbackDirective,
   filenameFromUrl,
+  quoteClip,
   stripFragment,
   textDirective
 } from "../linkformat.js";
@@ -50,4 +51,18 @@ test("fallback directive: exact for short, range for long", () => {
 test("filenames for the history list", () => {
   assert.equal(filenameFromUrl("https://arxiv.org/pdf/1706.03762"), "1706.03762");
   assert.equal(filenameFromUrl("https://x.org/docs/My%20Paper.pdf?x=1"), "My Paper.pdf");
+});
+
+test("quote with link: rich text links the quote, plain text keeps the URL", () => {
+  const clip = quoteClip({
+    quote: "Attention is\nall you <need> & more",
+    link: "https://x.org/a.pdf#page=3&:~:text=Attention",
+    page: 3
+  });
+  assert.equal(clip.text, "“Attention is all you <need> & more” (p. 3)\nhttps://x.org/a.pdf#page=3&:~:text=Attention");
+  assert.equal(
+    clip.html,
+    "“<a href=\"https://x.org/a.pdf#page=3&amp;:~:text=Attention\">Attention is all you &lt;need&gt; &amp; more</a>” (p. 3)"
+  );
+  assert.equal(quoteClip({ quote: "hi", link: "https://x.org/a.pdf", page: undefined }).text, "“hi”\nhttps://x.org/a.pdf");
 });

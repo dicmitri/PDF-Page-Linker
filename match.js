@@ -166,11 +166,12 @@ function snippetAround(page, rawStart, rawEnd) {
 // Text directives
 
 /**
- * Build a text directive for one match. The terms come from Chrome's own
- * selection text (so they match what Chrome's viewer will search), while the
- * index is used to check uniqueness and to supply prefix/suffix words.
+ * Build the text directive and the quote for one match. The terms come from
+ * Chrome's own selection text (so they match what Chrome's viewer will
+ * search), while the index is used to check uniqueness, to supply
+ * prefix/suffix words, and to complete words the selection cut in half.
  */
-function directiveForHit(index, selectionWords, hit, totalHits) {
+function passageForHit(index, selectionWords, hit, totalHits) {
   const start = rawPosition(index, hit.start);
   const end = rawPosition(index, hit.end - 1);
   const startPage = index.pages[start.pageIndex];
@@ -188,8 +189,17 @@ function directiveForHit(index, selectionWords, hit, totalHits) {
   if (droppedLast) {
     words = words.slice(0, -1);
   }
+
+  // For quotes, complete half-selected words with the missing letters instead.
+  const quoteWords = selectionWords.slice();
+  if (quoteWords.length) {
+    quoteWords[0] = lettersBefore(startPage.raw, start.rawIndex) + quoteWords[0];
+    quoteWords[quoteWords.length - 1] += lettersAfter(endPage.raw, end.rawIndex + 1);
+  }
+  const quote = quoteWords.join(" ");
+
   if (!words.length) {
-    return null;
+    return { directive: null, quote };
   }
 
   const joined = words.join(" ");
@@ -228,7 +238,25 @@ function directiveForHit(index, selectionWords, hit, totalHits) {
     if (before.length) parts.prefix = before.slice(-3).join(" ");
     if (after.length) parts.suffix = after.slice(0, 3).join(" ");
   }
-  return textDirective(parts);
+  return { directive: textDirective(parts), quote };
+}
+
+// Letters/digits directly before or after a position (at most 40), used to
+// complete a word the selection cut in half. Stops at spaces and punctuation.
+function lettersBefore(raw, index) {
+  let start = index;
+  while (start > 0 && index - start < 40 && ALNUM.test(raw[start - 1])) {
+    start -= 1;
+  }
+  return raw.slice(start, index);
+}
+
+function lettersAfter(raw, index) {
+  let end = index;
+  while (end < raw.length && end - index < 40 && ALNUM.test(raw[end])) {
+    end += 1;
+  }
+  return raw.slice(index, end);
 }
 
 /** [start, end) of the whitespace-delimited token containing raw[index]. */
@@ -319,11 +347,13 @@ export function locateInIndex(index, selectionText) {
       const start = rawPosition(index, hit.start);
       const end = rawPosition(index, hit.end - 1);
       const page = index.pages[pageIndex];
+      const { directive, quote } = passageForHit(index, selectionWords, hit, hits.length);
       return {
         page: pageIndex + 1,
         endPage: end.pageIndex + 1,
         occurrences,
-        directive: directiveForHit(index, selectionWords, hit, hits.length),
+        directive,
+        quote,
         snippet: snippetAround(page, start.rawIndex, start.pageIndex === end.pageIndex ? end.rawIndex : page.raw.length - 1)
       };
     });
@@ -352,6 +382,7 @@ export function locateInIndex(index, selectionText) {
         occurrences: 1,
         score: Math.round(score * 100) / 100,
         directive,
+        quote: selection,
         snippet: `${cleanSelection(index.pages[pageIndex].raw.slice(0, 140))}…`
       }))
     };

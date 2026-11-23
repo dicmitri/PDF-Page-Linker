@@ -3,7 +3,7 @@
   "name": "PDF Page and Passage Links",
   "short_name": "PDF Links",
   "version": "2.0.0",
-  "description": "Select text in a PDF, right-click, and copy a link to that page or passage. Works with Chrome's own PDF viewer.",
+  "description": "Right-click text in a PDF to copy a link to its page or passage, or the quote with its link.",
   "minimum_chrome_version": "127",
   "permissions": [
     "activeTab",
@@ -31,5 +31,19 @@
     "32": "icons/icon32.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
+  },
+  "commands": {
+    "copy-passage-link": {
+      "suggested_key": {
+        "default": "Alt+Shift+L"
+      },
+      "description": "Copy link to the selected passage"
+    },
+    "copy-page-link": {
+      "description": "Copy link to the page of the selected text"
+    },
+    "copy-quote-link": {
+      "description": "Copy the selected quote with a link"
+    }
   }
 }

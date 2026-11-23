@@ -1,16 +1,28 @@
-// Right-click a selection in a PDF -> work out its page -> copy a link.
+// Right-click a selection in a PDF (or press the shortcut) -> work out its
+// page -> copy a link.
 //
-// Permissions: clicking our menu item grants `activeTab`, a temporary host
-// permission for the tab's site. That is enough to download the PDF again and
-// read its text, so the user never sees a permission prompt.
+// Permissions: clicking our menu item or pressing our shortcut grants
+// `activeTab`, a temporary host permission for the tab's site. That is enough
+// to download the PDF again and read its text, so the user never sees a
+// permission prompt.
 
-import { buildLink, cleanSelection, fallbackDirective, filenameFromUrl, stripFragment } from "./linkformat.js";
+import { buildLink, cleanSelection, fallbackDirective, filenameFromUrl, quoteClip, stripFragment } from "./linkformat.js";
 import { addHistoryEntry } from "./history.js";
 
-const MENU_PAGE = "copy-page-link";
-const MENU_PASSAGE = "copy-passage-link";
+// Menu item ids double as command names (manifest "commands") and map to a kind.
+const KINDS = {
+  "copy-page-link": "page",
+  "copy-passage-link": "passage",
+  "copy-quote-link": "quote"
+};
+const MENU_TITLES = {
+  "copy-page-link": "Copy link to this page",
+  "copy-passage-link": "Copy link to this passage",
+  "copy-quote-link": "Copy quote with link"
+};
 const LAST_RESULT_KEY = "lastResult";
 const OFFSCREEN_URL = "offscreen.html";
+const PDF_VIEWER_ORIGIN = "chrome-extension://mhjfbmdgcfjbbpaeojofohoefgiehjai";
 
 const BADGE = {
   working: "#5f6368",
@@ -20,8 +32,9 @@ const BADGE = {
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.removeAll(() => {
-    chrome.contextMenus.create({ id: MENU_PAGE, title: "Copy link to this page", contexts: ["selection"] });
-    chrome.contextMenus.create({ id: MENU_PASSAGE, title: "Copy link to this passage", contexts: ["selection"] });
+    for (const [id, title] of Object.entries(MENU_TITLES)) {
+      chrome.contextMenus.create({ id, title, contexts: ["selection"] });
+    }
   });
 });
 
@@ -54,18 +67,89 @@ function withTimeout(promise, ms) {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
+// ---------------------------------------------------------------------------
+// Entry points
+
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId !== MENU_PAGE && info.menuItemId !== MENU_PASSAGE) {
+  const kind = KINDS[info.menuItemId];
+  if (!kind) {
     return;
   }
-  handleMenuClick(info, tab).catch(error => console.error("PDF links:", error));
+  const url = info.frameUrl || info.pageUrl || tab?.url || "";
+  handleSelection(kind, url, info.selectionText, tab?.id).catch(error => console.error("PDF links:", error));
 });
 
-async function handleMenuClick(info, tab) {
-  const kind = info.menuItemId === MENU_PASSAGE ? "passage" : "page";
-  const pdfUrl = stripFragment(info.frameUrl || info.pageUrl || tab?.url || "");
-  const selection = cleanSelection(info.selectionText);
-  const tabId = tab?.id;
+chrome.commands.onCommand.addListener((command, tab) => {
+  const kind = KINDS[command];
+  if (!kind || !tab) {
+    return;
+  }
+  handleShortcut(kind, tab).catch(error => console.error("PDF links:", error));
+});
+
+async function handleShortcut(kind, tab) {
+  const { text, unavailable } = await readSelection(tab.id);
+  if (!text) {
+    const pdfUrl = stripFragment(tab.url || "");
+    await reportProblem({
+      status: "error",
+      code: unavailable ? "selection-unavailable" : "no-selection",
+      candidates: [],
+      kind,
+      pdfUrl,
+      selection: "",
+      filename: filenameFromUrl(pdfUrl),
+      at: Date.now()
+    }, tab.id);
+    return;
+  }
+  await handleSelection(kind, tab.url || "", text, tab.id);
+}
+
+/**
+ * The selected text, read on demand (keyboard shortcut only; the right-click
+ * menu gets it from Chrome). In Chrome's PDF viewer the text is asked for
+ * through the viewer's message channel with its embedding page. That channel
+ * is internal to Chrome, so if it doesn't answer, report it as unavailable
+ * and point the user to the right-click menu.
+ */
+async function readSelection(tabId) {
+  try {
+    const [injection] = await chrome.scripting.executeScript({
+      target: { tabId },
+      args: [PDF_VIEWER_ORIGIN],
+      func: viewerOrigin => new Promise(resolve => {
+        const viewer = chrome.dom?.openOrClosedShadowRoot?.(document.body)
+          ?.querySelector('iframe[type="application/pdf"]');
+        if (!viewer) {
+          resolve({ text: String(window.getSelection?.() || "") });
+          return;
+        }
+        const onMessage = event => {
+          if (event.origin === viewerOrigin && event.data?.type === "getSelectedTextReply") {
+            clearTimeout(timer);
+            window.removeEventListener("message", onMessage);
+            resolve({ text: String(event.data.selectedText || "") });
+          }
+        };
+        const timer = setTimeout(() => {
+          window.removeEventListener("message", onMessage);
+          resolve({ text: "", unavailable: true });
+        }, 1500);
+        window.addEventListener("message", onMessage);
+        viewer.contentWindow.postMessage({ type: "getSelectedText" }, "*");
+      })
+    });
+    const result = injection?.result || {};
+    return { text: cleanSelection(result.text), unavailable: Boolean(result.unavailable) };
+  } catch {
+    return { text: "", unavailable: true };
+  }
+}
+
+async function handleSelection(kind, url, selectionText, tabId) {
+  const pdfUrl = stripFragment(url);
+  const selection = cleanSelection(selectionText);
 
   let result;
   if (!/^https?:\/\//i.test(pdfUrl)) {
@@ -96,14 +180,18 @@ async function handleMenuClick(info, tab) {
   await handleResult(record, tabId);
 }
 
+// ---------------------------------------------------------------------------
+// Results
+
 async function handleResult(record, tabId) {
+  const withPassage = record.kind !== "page";
   if (record.status === "found") {
     const candidate = record.candidates[0];
     const link = buildLink(record.pdfUrl, {
       page: candidate.page,
-      directive: record.kind === "passage" ? candidate.directive : undefined
+      directive: withPassage ? candidate.directive : undefined
     });
-    const copied = await copyAndRemember(record, link, candidate.page, tabId);
+    const copied = await copyAndRemember(record, link, candidate.page, tabId, candidate.quote);
     if (copied) {
       await setBadge(tabId, String(candidate.page), BADGE.ok, 6000);
     }
@@ -115,21 +203,33 @@ async function handleResult(record, tabId) {
   } else {
     // Page unknown. A passage link still works in Chrome without a page number,
     // unless the text is so common that Chrome would jump to the wrong place.
-    if (record.kind === "passage" && !["too-short", "too-common"].includes(record.status)) {
+    // Not for web pages: Chrome's own "Copy link to highlight" does that better.
+    if (withPassage && !["too-short", "too-common"].includes(record.status) && record.code !== "not-pdf") {
       const directive = fallbackDirective(record.selection);
       if (directive) {
         await copyAndRemember(record, buildLink(record.pdfUrl, { directive }), undefined, tabId);
       }
     }
-    await setBadge(tabId, "!", BADGE.attention);
-    await saveLastResult(record);
-    await openPopup();
+    await reportProblem(record, tabId);
   }
 }
 
-async function copyAndRemember(record, link, page, tabId) {
-  const ok = await writeClipboard(tabId, link);
+async function reportProblem(record, tabId) {
+  await setBadge(tabId, "!", BADGE.attention);
+  await saveLastResult(record);
+  await openPopup();
+}
+
+/** What goes on the clipboard: the link, or for quotes rich text + plain text. */
+function clipFor(record, link, page, quote) {
+  return record.kind === "quote" ? quoteClip({ quote, link, page }) : { text: link };
+}
+
+// `quote` is the selection with half-selected words completed (when known).
+async function copyAndRemember(record, link, page, tabId, quote = record.selection) {
+  const ok = await writeClipboard(tabId, clipFor(record, link, page, quote));
   record.link = link;
+  record.quote = quote;
   record.copied = Boolean(ok);
   record.copiedPage = page;
   await saveLastResult(record);
@@ -138,7 +238,7 @@ async function copyAndRemember(record, link, page, tabId) {
     pdfUrl: record.pdfUrl,
     page,
     link,
-    quote: record.kind === "passage" ? record.selection : "",
+    quote: record.kind === "page" ? "" : quote,
     filename: record.filename
   });
   if (!ok) {
@@ -150,13 +250,27 @@ async function copyAndRemember(record, link, page, tabId) {
 
 // Copy without the clipboardWrite permission (which adds an install warning):
 // write from the tab itself, which `activeTab` + `scripting` allow.
-async function writeClipboard(tabId, text) {
+async function writeClipboard(tabId, { text, html }) {
   if (tabId !== undefined) {
     try {
       const [injection] = await chrome.scripting.executeScript({
         target: { tabId },
-        func: value => navigator.clipboard.writeText(value).then(() => true, () => false),
-        args: [text]
+        args: [text, html || ""],
+        func: async (plain, rich) => {
+          try {
+            if (rich) {
+              await navigator.clipboard.write([new ClipboardItem({
+                "text/plain": new Blob([plain], { type: "text/plain" }),
+                "text/html": new Blob([rich], { type: "text/html" })
+              })]);
+            } else {
+              await navigator.clipboard.writeText(plain);
+            }
+            return true;
+          } catch {
+            return false;
+          }
+        }
       });
       if (injection?.result === true) {
         return true;
@@ -165,6 +279,7 @@ async function writeClipboard(tabId, text) {
       // Not scriptable (e.g. chrome:// pages); try the offscreen document.
     }
   }
+  // Last resort: plain text from the offscreen document.
   const { ok } = await sendToOffscreen({ type: "copy", text }).catch(() => ({ ok: false }));
   return Boolean(ok);
 }

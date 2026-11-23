@@ -89,6 +89,34 @@ input {
   padding: 14px 16px 12px;
 }
 
+.app-mark {
+  display: block;
+  flex: 0 0 auto;
+}
+
+.shortcut-hint {
+  margin-top: 10px;
+}
+
+.hint a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.hint a:hover {
+  text-decoration: underline;
+}
+
+kbd {
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  color: var(--text);
+  background: var(--surface);
+  font: 11px/1.4 ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+}
+
 .app-name {
   font-size: 13px;
   font-weight: 600;

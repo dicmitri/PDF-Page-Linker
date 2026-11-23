@@ -67,6 +67,28 @@ export function fallbackDirective(selectionText) {
   return textDirective({ start: words.slice(0, 4).join(" "), end: words.slice(-4).join(" ") });
 }
 
+const HTML_ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" };
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, character => HTML_ESCAPES[character]);
+}
+
+/**
+ * Clipboard content for "Copy quote with link".
+ * Rich text (Docs, Gmail, Slack…): the quote itself is the link, then the page.
+ * Plain text: the quote and page, then the link on its own line.
+ * The page is spelled out so readers whose PDF viewer ignores page links
+ * (e.g. Edge on Android) still know where to look.
+ */
+export function quoteClip({ quote, link, page }) {
+  const text = cleanSelection(quote);
+  const pageLabel = page ? ` (p. ${page})` : "";
+  return {
+    text: `“${text}”${pageLabel}\n${link}`,
+    html: `“<a href="${escapeHtml(link)}">${escapeHtml(text)}</a>”${pageLabel}`
+  };
+}
+
 /** Human-friendly name for a PDF URL. */
 export function filenameFromUrl(url) {
   try {

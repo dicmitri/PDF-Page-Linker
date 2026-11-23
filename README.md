@@ -10,7 +10,8 @@ working as usual.
 
 ```
 Right-click a selection ─► "Copy link to this page"     ─► https://host/doc.pdf#page=12
-                         └► "Copy link to this passage" ─► https://host/doc.pdf#page=12&:~:text=first%20words,last%20words
+                         ├► "Copy link to this passage" ─► https://host/doc.pdf#page=12&:~:text=first%20words,last%20words
+                         └► "Copy quote with link"      ─► “the selected passage” (p. 12) + passage link
 ```
 
 Whoever opens a passage link in Chrome lands on that passage, highlighted, with
@@ -41,6 +42,14 @@ Windows and Chrome on Android read the page as `12:~:text=…` and open page 1.
 - **Copy link to this page / passage**: select any text in a PDF and right-click
   → **PDF Page and Passage Links**. When the link is copied, the toolbar badge shows the
   page number.
+- **Copy quote with link**: copies the selected text together with its link.
+  In Docs, Gmail, Slack and other rich-text apps the quote itself becomes the
+  link, followed by the page, e.g. “*the selected passage*” (p. 12); plain-text
+  apps get the quote and page, then the link on its own line. Words cut in half
+  by the selection are completed.
+- **Keyboard shortcut**: select text and press **Alt+Shift+L** for a passage
+  link. Page and quote links can get their own shortcuts at
+  `chrome://extensions/shortcuts`.
 - **Same text on several pages**: the popup opens and asks which one you meant,
   showing each occurrence in context. Text that appears on more than 10 pages
   asks you to select a longer passage instead.
@@ -73,8 +82,15 @@ Only PDFs opened over `http`/`https` are supported.
 4. Passage links use the words from Chrome's own selection, so Chrome will find
    them. The PDF text is used to check they are unique, and to add surrounding
    words (`prefix-,` / `,-suffix`) when they aren't.
-5. The link is copied by a script injected into the tab. If that isn't
-   possible, the popup shows it with a **Copy** button.
+5. The link is copied by a script injected into the tab (as rich text plus
+   plain text for quotes). If that isn't possible, the popup shows it with a
+   **Copy** button.
+
+The keyboard shortcut works the same way, but Chrome doesn't hand a shortcut
+the selected text, so the extension asks Chrome's PDF viewer for it through
+the message channel between the viewer and its page. That channel is internal
+to Chrome; if a future Chrome stops answering, the popup says so and the
+right-click menu keeps working.
 
 The text of the last three PDFs is kept in memory, so further links into the
 same PDF are instant.
@@ -84,10 +100,12 @@ same PDF are instant.
 | Permission | Why |
 |---|---|
 | `contextMenus` | The right-click items |
-| `activeTab` | Download the PDF you right-clicked in, only after you click an item |
+| `activeTab` | Download the PDF you're linking into, only after you click an item or press the shortcut |
 | `offscreen` | Run PDF.js (it needs a document and a worker) |
-| `scripting` | Write the link to the clipboard from the tab |
+| `scripting` | Write the link to the clipboard from the tab; read the selection when you press the shortcut |
 | `storage` | Keep the link history on your device |
+
+The keyboard shortcut (`commands` in the manifest) needs no permission.
 
 There are no host permissions, and Chrome shows no permission warnings when
 installing (checked with `chrome.management.getPermissionWarningsByManifest`).
@@ -98,16 +116,17 @@ See [PRIVACY.html](PRIVACY.html) for what is stored.
 | Path | Role |
 |---|---|
 | `manifest.json` | Extension manifest (MV3) |
-| `background.js` | Context menu, offscreen document, badge, clipboard |
+| `background.js` | Context menu, keyboard shortcut, offscreen document, badge, clipboard |
 | `offscreen.html` / `offscreen.js` | Hidden page that runs PDF.js |
 | `locate.js` | Download, PDF.js text extraction, cache |
 | `match.js` | Matching and passage-link logic (no browser dependencies) |
 | `linkformat.js` | Link and `text=` directive encoding |
 | `popup.*` | Last result, page chooser, manual page entry, history |
 | `history.js` | Link history in `chrome.storage.local` |
+| `icons/` | Toolbar and store icons; `mark.svg` is the popup header mark |
 | `pdfjs/` | PDF.js 5.6.205 core library and character maps (see notices) |
 | `tests/` | Unit tests and the real-browser accuracy test |
-| `store-assets/` | Chrome Web Store images (not part of the package) |
+| `store-assets/` | Chrome Web Store images and the logo's SVG sources (not part of the package) |
 
 ## Tests
 

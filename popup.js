@@ -1,4 +1,4 @@
-import { buildLink, fallbackDirective, filenameFromUrl, stripFragment } from "./linkformat.js";
+import { buildLink, fallbackDirective, filenameFromUrl, quoteClip, stripFragment } from "./linkformat.js";
 import { addHistoryEntry, deleteHistoryEntry, getHistory, pageOf } from "./history.js";
 
 const LAST_RESULT_KEY = "lastResult";
@@ -19,11 +19,13 @@ const ERRORS = {
   "no-text": ["No text in this PDF", "It may be a scanned image, so the page can't be detected. Enter it below."],
   "too-short": ["Select a bit more", "Select a few words, then try again."],
   "too-common": ["Too common", "This text is on too many pages to tell which one you meant. Select a longer passage."],
-  "not-pdf": ["Not a PDF", "This works with PDFs opened from the web."],
+  "not-pdf": ["Not a PDF", "This works with PDFs. On web pages, Chrome's own “Copy link to highlight” in the right-click menu does the same."],
   "unsupported-url": ["Not a web PDF", "Only PDFs opened over http or https are supported."],
   "fetch-failed": ["Couldn't read the PDF", null],
   "encrypted": ["Password-protected PDF", "The page can't be detected in a protected PDF. Enter it below."],
-  "timeout": ["That took too long", "Reading the PDF timed out. Try again, or enter the page below."]
+  "timeout": ["That took too long", "Reading the PDF timed out. Try again, or enter the page below."],
+  "no-selection": ["Nothing selected", "Select some text in the PDF, then press the shortcut again."],
+  "selection-unavailable": ["Couldn't read the selection", "Chrome's PDF viewer didn't share the selected text. Use the right-click menu instead."]
 };
 
 const $ = id => document.getElementById(id);
@@ -38,6 +40,7 @@ async function init() {
   const { name } = chrome.runtime.getManifest();
   $("appName").textContent = name;
   $("menuName").textContent = name;
+  renderShortcutHint();
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (tab?.id !== undefined) {
     chrome.action.setBadgeText({ tabId: tab.id, text: "" }).catch(() => {});
@@ -93,7 +96,7 @@ function renderResult(record) {
     }
     candidates.hidden = false;
   } else if (record.copied) {
-    const title = record.kind === "page" ? "Link copied" : "Passage link copied";
+    const title = { page: "Link copied", passage: "Passage link copied", quote: "Quote copied" }[record.kind] || "Link copied";
     setStatus("success", "check", title, pageMeta(record.copiedPage));
     if (!record.copiedPage) {
       setMessage(`${errorText || record.message || "The page couldn't be detected."} ` +
@@ -121,7 +124,7 @@ function renderResult(record) {
     $("resultLink").title = record.link;
     const copy = $("copyAgain");
     copy.innerHTML = icon("copy");
-    copy.onclick = () => copyWithFeedback(record.link, copy);
+    copy.onclick = () => copyWithFeedback(clipFor(record.kind, record.quote || record.selection, record.link, record.copiedPage), copy);
   }
 }
 
@@ -149,18 +152,19 @@ function candidateItem(record, candidate) {
   button.addEventListener("click", async () => {
     const link = buildLink(record.pdfUrl, {
       page: candidate.page,
-      directive: record.kind === "passage" ? candidate.directive : undefined
+      directive: record.kind === "page" ? undefined : candidate.directive
     });
-    await navigator.clipboard.writeText(link);
+    const quote = candidate.quote || record.selection;
+    await writeClip(clipFor(record.kind, quote, link, candidate.page));
     await addHistoryEntry({
       kind: record.kind,
       pdfUrl: record.pdfUrl,
       page: candidate.page,
       link,
-      quote: record.kind === "passage" ? record.selection : "",
+      quote: record.kind === "page" ? "" : quote,
       filename: record.filename
     });
-    const updated = { ...record, copied: true, copiedPage: candidate.page, link };
+    const updated = { ...record, copied: true, copiedPage: candidate.page, link, quote };
     await chrome.storage.session.set({ [LAST_RESULT_KEY]: updated });
     renderResult(updated);
     renderHistory(await getHistory());
@@ -179,14 +183,15 @@ function renderManual(record, tabUrl) {
   const pdfUrl = stripFragment(tabUrl);
   // If a passage link in this same PDF was copied without a page, re-copy it
   // with the page added.
-  const pendingDirective = record && record.pdfUrl === pdfUrl && record.kind === "passage" &&
-    !record.copiedPage && !["too-short", "too-common"].includes(record.status)
+  const pendingDirective = record && record.pdfUrl === pdfUrl && record.kind !== "page" &&
+    !record.copiedPage && record.selection && !["too-short", "too-common"].includes(record.status)
     ? fallbackDirective(record.selection)
     : null;
 
   $("manual").hidden = false;
+  const pendingKind = pendingDirective ? record.kind : "page";
   $("manualHint").textContent = pendingDirective
-    ? "Includes the passage you selected."
+    ? (pendingKind === "quote" ? "Includes the quote you selected." : "Includes the passage you selected.")
     : filenameFromUrl(pdfUrl);
 
   $("manualForm").addEventListener("submit", async event => {
@@ -197,9 +202,9 @@ function renderManual(record, tabUrl) {
     }
     const link = buildLink(pdfUrl, { page, directive: pendingDirective || undefined });
     const button = event.submitter || $("manualForm").querySelector("button");
-    await copyWithFeedback(link, button);
+    await copyWithFeedback(clipFor(pendingKind, record?.selection, link, page), button);
     await addHistoryEntry({
-      kind: pendingDirective ? "passage" : "page",
+      kind: pendingKind,
       pdfUrl,
       page,
       link,
@@ -314,8 +319,49 @@ function absoluteTime(value) {
     : new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
 }
 
-async function copyWithFeedback(text, button) {
-  await navigator.clipboard.writeText(text);
+function clipFor(kind, selection, link, page) {
+  return kind === "quote" ? quoteClip({ quote: selection, link, page }) : { text: link };
+}
+
+async function writeClip(clip) {
+  if (typeof clip === "string" || !clip.html) {
+    await navigator.clipboard.writeText(typeof clip === "string" ? clip : clip.text);
+    return;
+  }
+  await navigator.clipboard.write([new ClipboardItem({
+    "text/plain": new Blob([clip.text], { type: "text/plain" }),
+    "text/html": new Blob([clip.html], { type: "text/html" })
+  })]);
+}
+
+async function renderShortcutHint() {
+  const commands = await chrome.commands.getAll();
+  const passage = commands.find(command => command.name === "copy-passage-link");
+  const hint = $("shortcutHint");
+  hint.replaceChildren();
+  if (passage?.shortcut) {
+    hint.append("Or press ");
+    passage.shortcut.split("+").forEach((key, index) => {
+      if (index) hint.append("+");
+      const kbd = document.createElement("kbd");
+      kbd.textContent = key;
+      hint.append(kbd);
+    });
+    hint.append(" for a passage link. ");
+  }
+  const change = document.createElement("a");
+  change.href = "#";
+  change.textContent = passage?.shortcut ? "Change" : "Set a keyboard shortcut";
+  change.addEventListener("click", event => {
+    event.preventDefault();
+    chrome.tabs.create({ url: "chrome://extensions/shortcuts" });
+  });
+  hint.append(change);
+  hint.hidden = false;
+}
+
+async function copyWithFeedback(clip, button) {
+  await writeClip(clip);
   if (button.classList.contains("icon-button")) {
     const original = button.innerHTML;
     const label = button.getAttribute("aria-label");
