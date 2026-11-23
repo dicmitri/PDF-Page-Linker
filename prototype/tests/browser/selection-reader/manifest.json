@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "TEST ONLY: PDF selection reader",
+  "version": "1.0",
+  "description": "Used by tests/browser/accuracy.cjs to read exactly what Chrome's PDF viewer selected. Never ship this.",
+  "content_scripts": [
+    {
+      "matches": ["http://127.0.0.1/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
