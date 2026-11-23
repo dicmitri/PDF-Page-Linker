@@ -17,40 +17,21 @@
 
 ## Store listing
 
-- **Screenshots must be retaken.** The ones in `store-assets/screenshots/` show the
-  v1 custom viewer, which no longer exists. Suggested 1280×800 shots:
-  1. right-click menu on a selection in Chrome's PDF viewer, showing the PDF Page and Passage Links submenu;
-  2. a passage link opened, with the passage highlighted;
-  3. the popup asking "This text appears on N pages", with snippets;
-  4. a quote pasted into Docs or Gmail, the quote itself linked, with "(p. N)";
-  5. the popup's recent links and "Link to a page" box.
-- **Promotional images must be redone too**: the tiles in
-  `store-assets/promotional-images/` show the old logo, the old name and v1's UI.
-- Suggested short description (132 characters max):
-  "Right-click text in any PDF to copy a link to its page or passage, or the quote with its link. Works with Chrome's PDF viewer."
-- Suggested detailed description:
-  > Share exactly where you mean in an online PDF. Select any text, right-click and
-  > choose **Copy link to this page** or **Copy link to this passage**. PDF Page and Passage Links
-  > works out the page number for you.
-  >
-  > • Page links (`…/file.pdf#page=12`) open on the right page in any PDF viewer
-  >   that supports page links.
-  > • Passage links open in Chrome scrolled to the passage, highlighted. Recipients
-  >   don't need the extension, and most other browsers still open the right page.
-  > • Copy quote with link: paste the passage into Docs, Gmail or Slack as a linked
-  >   quote with its page number.
-  > • Keyboard shortcut (Alt+Shift+L) for passage links.
-  > • If the text appears on several pages, the extension asks which one you meant.
-  > • Type a page number in the popup to link to any page directly.
-  > • Your recent links are kept on your device, with Open, Copy and Delete.
-  >
-  > Uses Chrome's built-in PDF viewer, with no custom viewer and no redirects. No
-  > accounts, no tracking, no data leaves your device.
-- Category, language, support URL/email, optional website: still to fill in.
+Every dashboard field (listing text, category, images, privacy answers,
+distribution, reviewer instructions) is drafted, ready to paste, in
+[store-assets/listing-copy/chrome-web-store-listing.md](store-assets/listing-copy/chrome-web-store-listing.md).
+Publish 2.0.0 as an **update to the existing item**, not as a new item; that
+file explains why.
+
+- Screenshots: `store-assets/screenshots/01`–`05` (1280×800, captioned);
+  uncaptioned versions in `store-assets/screenshots/raw/`.
+- Promo tiles: `store-assets/promotional-images/` (440×280 and 1400×560).
+- The screenshots use a sample PDF written for the listing
+  (`store-assets/screenshot-source/`), so no third-party document appears in them.
 
 ## Privacy tab
 
-- **Single purpose**: "Copy shareable links to a specific page or passage of a PDF you're reading."
+- **Single purpose**: "Copy shareable links to a specific page or passage of a PDF the user is reading in Chrome's PDF viewer, optionally together with the quoted text."
 - **Permission justifications**:
   - `contextMenus`: adds "Copy link to this page / passage" and "Copy quote with link" to the right-click menu on selected text.
   - `activeTab`: after the user clicks one of those items or presses the extension's keyboard shortcut, temporarily allows downloading the PDF open in that tab to find which page the selected text is on.
