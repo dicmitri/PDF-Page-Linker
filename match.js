@@ -151,10 +151,15 @@ function rawPosition(index, offset) {
 }
 
 function snippetAround(page, rawStart, rawEnd) {
-  const before = page.raw.slice(Math.max(0, rawStart - 70), rawStart);
+  const from = Math.max(0, rawStart - 70);
+  let before = page.raw.slice(from, rawStart);
+  let after = page.raw.slice(rawEnd + 1, rawEnd + 71);
+  // Don't start or end the snippet halfway through a word.
+  if (from > 0) before = before.replace(/^\S*\s/, "");
+  if (rawEnd + 71 < page.raw.length) after = after.replace(/\s\S*$/, "");
   const match = page.raw.slice(rawStart, rawEnd + 1);
-  const after = page.raw.slice(rawEnd + 1, rawEnd + 71);
-  return cleanSelection(`…${before}[[${match}]]${after}…`);
+  const more = rawEnd + 71 < page.raw.length;
+  return cleanSelection(`${from > 0 ? "…" : ""}${before}[[${match}]]${after}${more ? "…" : ""}`);
 }
 
 // ---------------------------------------------------------------------------

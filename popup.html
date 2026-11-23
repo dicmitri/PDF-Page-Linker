@@ -8,34 +8,47 @@
   </head>
   <body>
     <header class="header">
-      <h1>PDF Page Linker</h1>
-      <p class="hint">Select text in a PDF, right-click, and choose a link.</p>
+      <span id="appName" class="app-name">PDF Page Linker</span>
     </header>
 
-    <section id="result" class="card" hidden aria-live="polite">
-      <h2 id="resultTitle"></h2>
-      <p id="resultMessage" class="message"></p>
-      <div id="candidates" class="candidates"></div>
-      <div id="resultLinkRow" class="link-row" hidden>
-        <code id="resultLink" class="link"></code>
-        <button id="copyAgain" type="button" class="button">Copy</button>
+    <!-- Result of the last right-click, or a short how-to when there is none. -->
+    <section id="result" class="section result" aria-live="polite" hidden>
+      <div class="status">
+        <span id="statusIcon" class="status-icon" aria-hidden="true"></span>
+        <div class="status-text">
+          <h1 id="resultTitle" class="status-title"></h1>
+          <p id="resultMeta" class="status-meta"></p>
+        </div>
       </div>
-      <p id="resultMeta" class="meta"></p>
+      <p id="resultMessage" class="message" hidden></p>
+      <div id="resultLinkRow" class="link-field" hidden>
+        <code id="resultLink" class="link-text"></code>
+        <button id="copyAgain" type="button" class="icon-button" aria-label="Copy link" title="Copy link"></button>
+      </div>
+      <ol id="candidates" class="candidates" hidden></ol>
     </section>
 
-    <section id="manual" class="card" hidden>
-      <h2>Link to a page</h2>
-      <form id="manualForm" class="manual-form">
-        <label for="manualPage">Page</label>
-        <input id="manualPage" type="number" min="1" inputmode="numeric" required>
+    <section id="howTo" class="section how-to" hidden>
+      <p class="how-to-title">Link to a page or passage</p>
+      <ol class="steps">
+        <li><span>Select text in a PDF</span></li>
+        <li><span>Right-click</span></li>
+        <li><span>Choose <strong id="menuName">PDF Page Linker</strong></span></li>
+      </ol>
+    </section>
+
+    <section id="manual" class="section" hidden>
+      <form id="manualForm" class="manual">
+        <label for="manualPage" class="manual-label">Link to page</label>
+        <input id="manualPage" class="page-input" type="number" min="1" inputmode="numeric" required>
         <button type="submit" class="button primary">Copy link</button>
       </form>
-      <p id="manualHint" class="meta"></p>
+      <p id="manualHint" class="hint"></p>
     </section>
 
-    <section class="card history">
-      <h2>Recent links</h2>
-      <p id="emptyHistory" class="meta" hidden>No links yet.</p>
+    <section class="section history">
+      <h2 class="section-label">Recent <span id="historyCount" class="count"></span></h2>
+      <p id="emptyHistory" class="hint" hidden>Links you copy will appear here.</p>
       <ol id="historyList" class="history-list"></ol>
     </section>
 
