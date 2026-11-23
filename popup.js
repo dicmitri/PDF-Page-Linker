@@ -19,7 +19,7 @@ const ERRORS = {
   "no-text": ["No text in this PDF", "It may be a scanned image, so the page can't be detected. Enter it below."],
   "too-short": ["Select a bit more", "Select a few words, then try again."],
   "too-common": ["Too common", "This text is on too many pages to tell which one you meant. Select a longer passage."],
-  "not-pdf": ["Not a PDF", "PDF Page Linker works with PDFs opened from the web."],
+  "not-pdf": ["Not a PDF", "This works with PDFs opened from the web."],
   "unsupported-url": ["Not a web PDF", "Only PDFs opened over http or https are supported."],
   "fetch-failed": ["Couldn't read the PDF", null],
   "encrypted": ["Password-protected PDF", "The page can't be detected in a protected PDF. Enter it below."],

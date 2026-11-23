@@ -1,4 +1,4 @@
-# PDF Page Linker
+# PDF Page and Passage Links
 
 A Chrome extension for sharing links to a specific page, or a specific
 passage, of an online PDF. Select text in a PDF, right-click, and copy a link;
@@ -39,7 +39,7 @@ Windows and Chrome on Android read the page as `12:~:text=…` and open page 1.
 ## Using it
 
 - **Copy link to this page / passage**: select any text in a PDF and right-click
-  → **PDF Page Linker**. When the link is copied, the toolbar badge shows the
+  → **PDF Page and Passage Links**. When the link is copied, the toolbar badge shows the
   page number.
 - **Same text on several pages**: the popup opens and asks which one you meant,
   showing each occurrence in context. Text that appears on more than 10 pages
@@ -155,6 +155,11 @@ mkdir -p dist && git archive --format=zip --output=dist/pdf-page-linker-2.0.0.zi
   detection, the page fallback and history remain this extension's job.
 
 ## Version 1
+
+Until 2.0 the extension was called **PDF Page Linker**. The name is spelled
+with "and" rather than "&" because Chrome drops "&" from menu labels (it marks
+a keyboard shortcut letter there), and the name is the heading of the
+right-click submenu.
 
 Version 1 replaced Chrome's PDF viewer with a custom PDF.js viewer that could
 read the current page number. It was removed in 2.0 because recreating a

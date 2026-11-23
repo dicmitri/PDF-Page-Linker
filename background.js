@@ -58,7 +58,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId !== MENU_PAGE && info.menuItemId !== MENU_PASSAGE) {
     return;
   }
-  handleMenuClick(info, tab).catch(error => console.error("PDF Page Linker:", error));
+  handleMenuClick(info, tab).catch(error => console.error("PDF links:", error));
 });
 
 async function handleMenuClick(info, tab) {
@@ -72,7 +72,7 @@ async function handleMenuClick(info, tab) {
     result = {
       status: "error",
       code: "unsupported-url",
-      message: "PDF Page Linker only works with PDFs opened from the web (http/https).",
+      message: "Only PDFs opened from the web (http/https) are supported.",
       candidates: []
     };
   } else {

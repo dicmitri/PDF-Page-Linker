@@ -17,7 +17,7 @@
 
 - **Screenshots must be retaken.** The ones in `store-assets/screenshots/` show the
   v1 custom viewer, which no longer exists. Suggested 1280×800 shots:
-  1. right-click menu on a selection in Chrome's PDF viewer, showing the PDF Page Linker submenu;
+  1. right-click menu on a selection in Chrome's PDF viewer, showing the PDF Page and Passage Links submenu;
   2. a passage link opened, with the passage highlighted;
   3. the popup asking "This text appears on N pages", with snippets;
   4. the popup's recent links and "Link to a page" box.
@@ -26,7 +26,7 @@
   "Right-click text in any PDF to copy a link to that page or passage. Works with Chrome's own PDF viewer."
 - Suggested detailed description:
   > Share exactly where you mean in an online PDF. Select any text, right-click and
-  > choose **Copy link to this page** or **Copy link to this passage**. PDF Page Linker
+  > choose **Copy link to this page** or **Copy link to this passage**. PDF Page and Passage Links
   > works out the page number for you.
   >
   > • Page links (`…/file.pdf#page=12`) open on the right page in any PDF viewer

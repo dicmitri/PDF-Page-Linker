@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "PDF Page Linker",
-  "short_name": "PDF Linker",
+  "name": "PDF Page and Passage Links",
+  "short_name": "PDF Links",
   "version": "2.0.0",
   "description": "Select text in a PDF, right-click, and copy a link to that page or passage. Works with Chrome's own PDF viewer.",
   "minimum_chrome_version": "127",
@@ -17,7 +17,7 @@
     "type": "module"
   },
   "action": {
-    "default_title": "PDF Page Linker",
+    "default_title": "PDF Page and Passage Links",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
