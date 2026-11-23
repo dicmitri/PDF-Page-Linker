@@ -42,7 +42,7 @@ What existing v1 users will see:
 
 | Field | Value |
 |---|---|
-| Package | `dist/pdf-page-linker-2.0.0.zip`, built with `mkdir -p dist && git archive --format=zip --output=dist/pdf-page-linker-2.0.0.zip HEAD` from the merged commit |
+| Package | `dist/pdf-page-linker-2.0.0.zip`, built with `./package.sh` from the merged commit |
 | Version | 2.0.0 (from `manifest.json`) |
 
 ---

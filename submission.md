@@ -5,10 +5,10 @@
 - Bump `version` in `manifest.json` before every upload (currently `2.0.0`).
 - Build the ZIP from a committed tree:
   ```sh
-  mkdir -p dist && git archive --format=zip --output=dist/pdf-page-linker-2.0.0.zip HEAD
-  unzip -l dist/pdf-page-linker-2.0.0.zip   # check the contents
+  ./package.sh                               # -> dist/pdf-page-linker-2.0.0.zip
+  unzip -l dist/pdf-page-linker-2.0.0.zip    # check the contents
   ```
-  `.gitattributes` excludes `tests/`, `store-assets/`, docs and dotfiles, so the
+  The script leaves out `tests/`, `store-assets/`, docs and dotfiles, so the
   ZIP contains only the manifest, the extension's JS/HTML/CSS, `icons/` and `pdfjs/`.
 - Load the unzipped folder with **Load unpacked** once, to be sure it runs.
 - Icons are wired in `manifest.json` (`icons/` 16, 32, 48, 128). The store icon is

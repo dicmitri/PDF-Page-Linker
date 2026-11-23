@@ -1,7 +1,0 @@
-# Keep the Chrome Web Store package (git archive) to the extension's runtime files.
-/tests/            export-ignore
-/store-assets/     export-ignore
-/*.md              export-ignore
-/PRIVACY.html      export-ignore
-/.gitattributes    export-ignore
-/.gitignore        export-ignore
