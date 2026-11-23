@@ -64,7 +64,7 @@ function renderResult(record) {
     $("resultTitle").textContent = "No link copied";
     $("resultMessage").textContent = MESSAGES[record.status] || record.message || "Something went wrong.";
     if (record.status === "too-common" && record.pageCount) {
-      $("resultTitle").textContent = `This text appears on ${record.pageCount}${record.capped ? "+" : ""} pages`;
+      $("resultTitle").textContent = `This text appears on ${record.pageCount} pages`;
     }
   }
 

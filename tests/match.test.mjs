@@ -97,6 +97,21 @@ test("many hits on early pages don't hide a later page", () => {
   assert.deepEqual(pagesOf(result), [1, 2, 3, 4, 5, 6]);
 });
 
+test("thousands of hits on one page don't hide a later page", () => {
+  const index = indexFromPageTexts(["alpha bravo ".repeat(5000), "Unique context alpha bravo on page two."]);
+  const result = locateInIndex(index, "alpha bravo");
+  assert.equal(result.status, "ambiguous");
+  assert.deepEqual(pagesOf(result), [1, 2]);
+});
+
+test("fuzzy matches on more than 10 pages are too common, not truncated", () => {
+  const pages = Array.from({ length: 11 }, (_, i) => `page ${i} alpha charlie bravo`);
+  const result = locateInIndex(indexFromPageTexts(pages), "alpha bravo charlie");
+  assert.equal(result.method, "fuzzy");
+  assert.equal(result.status, "too-common");
+  assert.equal(result.pageCount, 11);
+});
+
 test("tiny selections and unknown text", () => {
   assert.equal(locateInIndex(doc, "of").status, "too-short");
   assert.equal(locateInIndex(doc, "this sentence is nowhere in the document").status, "not-found");

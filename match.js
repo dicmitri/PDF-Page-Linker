@@ -17,8 +17,9 @@ import {
   wordsOf
 } from "./linkformat.js";
 
-// Enough to see every page a phrase appears on (indexOf is cheap).
-const MAX_HITS = 5000;
+// Matches kept per page. Every page is still scanned, so a phrase repeated
+// thousands of times on early pages can't hide a later page.
+const PER_PAGE_HITS = 20;
 const MAX_CANDIDATES = 10;
 const MIN_QUERY_CHARS = 4;
 
@@ -82,7 +83,7 @@ export function indexFromPageTexts(pageTexts) {
 // ---------------------------------------------------------------------------
 // Helpers
 
-function findAll(haystack, needle, limit = MAX_HITS) {
+function findAll(haystack, needle, limit) {
   const hits = [];
   let at = haystack.indexOf(needle);
   while (at !== -1 && hits.length < limit) {
@@ -94,6 +95,35 @@ function findAll(haystack, needle, limit = MAX_HITS) {
 
 function countOccurrences(index, normalizedTerm, limit = 2) {
   return normalizedTerm ? findAll(index.text, normalizedTerm, limit).length : 0;
+}
+
+/**
+ * Offsets of `needle` on every page it occurs on, keeping at most
+ * PER_PAGE_HITS per page and then skipping to the next page.
+ */
+function findOnEveryPage(index, needle) {
+  const hits = [];
+  let from = 0;
+  let currentPage = -1;
+  let onPage = 0;
+  for (;;) {
+    const at = index.text.indexOf(needle, from);
+    if (at === -1) {
+      return hits;
+    }
+    const pageIndex = pageIndexAt(index, at);
+    if (pageIndex !== currentPage) {
+      currentPage = pageIndex;
+      onPage = 0;
+    }
+    hits.push(at);
+    onPage += 1;
+    from = at + 1;
+    if (onPage >= PER_PAGE_HITS) {
+      const nextPageStart = pageIndex + 1 < index.starts.length ? index.starts[pageIndex + 1] : index.text.length;
+      from = Math.max(from, nextPageStart);
+    }
+  }
 }
 
 /** Index (0-based) of the page containing a normalized offset. */
@@ -226,7 +256,8 @@ function fuzzyCandidates(index, selectionWords) {
   if (!best || best.score < 0.6) {
     return [];
   }
-  return scored.filter(entry => entry.score >= Math.max(0.6, best.score - 0.1)).slice(0, MAX_CANDIDATES);
+  // All qualifying pages; the caller decides whether there are too many.
+  return scored.filter(entry => entry.score >= Math.max(0.6, best.score - 0.1));
 }
 
 /**
@@ -250,7 +281,7 @@ export function locateInIndex(index, selectionText) {
 
   // 1. Exact match on normalized text.
   let method = "exact";
-  const hits = findAll(index.text, query).map(at => ({ start: at, end: at + query.length }));
+  const hits = findOnEveryPage(index, query).map(at => ({ start: at, end: at + query.length }));
 
   // 2. Beginning and end match, middle differs (equations, figures, odd glyphs).
   if (!hits.length && query.length >= 30) {
@@ -259,7 +290,7 @@ export function locateInIndex(index, selectionText) {
     const head = query.slice(0, k);
     const tail = query.slice(-k);
     const maxSpan = Math.ceil(query.length * 1.5) + 200;
-    for (const at of findAll(index.text, head)) {
+    for (const at of findOnEveryPage(index, head)) {
       const tailAt = index.text.indexOf(tail, at + k);
       if (tailAt !== -1 && tailAt + k - at <= maxSpan) {
         hits.push({ start: at, end: tailAt + k });
@@ -277,7 +308,7 @@ export function locateInIndex(index, selectionText) {
       byPage.get(pageIndex).occurrences += 1;
     }
     if (byPage.size > MAX_CANDIDATES) {
-      return { ...base, status: "too-common", method, pageCount: byPage.size, capped: hits.length >= MAX_HITS };
+      return { ...base, status: "too-common", method, pageCount: byPage.size };
     }
     const candidates = [...byPage.entries()].map(([pageIndex, { hit, occurrences }]) => {
       const start = rawPosition(index, hit.start);
@@ -301,6 +332,9 @@ export function locateInIndex(index, selectionText) {
 
   // 3. Fuzzy: which page contains most of the selection's longer words.
   const fuzzy = fuzzyCandidates(index, selectionWords);
+  if (fuzzy.length > MAX_CANDIDATES) {
+    return { ...base, status: "too-common", method: "fuzzy", pageCount: fuzzy.length };
+  }
   if (fuzzy.length) {
     const directive = fallbackDirective(selection);
     return {
