@@ -1,145 +1,244 @@
 :root {
-  color-scheme: light;
-  font-family: Arial, Helvetica, sans-serif;
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --card: #f8f9fa;
   --text: #202124;
   --muted: #5f6368;
   --border: #dadce0;
-  --hover: #f1f3f4;
-  --blue: #1a73e8;
+  --accent: #1a73e8;
+  --accent-text: #ffffff;
+  --mark: #e9d2fd;
   --danger: #b3261e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #202124;
+    --card: #2d2e31;
+    --text: #e8eaed;
+    --muted: #9aa0a6;
+    --border: #3c4043;
+    --accent: #8ab4f8;
+    --accent-text: #202124;
+    --mark: #5b3f78;
+    --danger: #f2b8b5;
+  }
 }
 
 * {
   box-sizing: border-box;
 }
 
-html,
+/* Classes below set display; keep the hidden attribute authoritative. */
+[hidden] {
+  display: none !important;
+}
+
+/* Set on body: Chrome's default style for extension pages shrinks body text to 75%. */
 body {
-  width: 360px;
-  min-height: 180px;
+  width: 380px;
   margin: 0;
+  font: 13px/1.4 system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+  padding: 12px;
   color: var(--text);
-  background: #ffffff;
-}
-
-button {
-  font: inherit;
-}
-
-.popup-header {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  padding: 14px 16px 10px;
-  background: #ffffff;
-  border-bottom: 1px solid var(--border);
+  background: var(--bg);
 }
 
 h1 {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0;
+  font-size: 15px;
 }
 
-.empty-state {
-  padding: 28px 18px;
-  color: var(--muted);
+h2 {
+  margin: 0 0 6px;
   font-size: 13px;
-  text-align: center;
+}
+
+.hint,
+.meta,
+.message {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.message {
+  color: var(--text);
+}
+
+.header {
+  margin-bottom: 10px;
+}
+
+.card {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+}
+
+.button {
+  flex: 0 0 auto;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--accent);
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.button.primary {
+  border-color: var(--accent);
+  color: var(--accent-text);
+  background: var(--accent);
+}
+
+.button:focus-visible,
+.candidate:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.link-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.link {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.candidates {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.candidates:empty {
+  display: none;
+}
+
+.candidate {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  background: var(--bg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.candidate:hover {
+  border-color: var(--accent);
+}
+
+.candidate-page {
+  font-weight: 600;
+}
+
+.candidate-snippet {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+mark {
+  color: inherit;
+  background: var(--mark);
+}
+
+.manual-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.manual-form input {
+  width: 80px;
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  background: var(--bg);
+  font: inherit;
 }
 
 .history-list {
-  display: flex;
-  flex-direction: column;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .history-item {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 12px;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
 }
 
-.history-item:hover {
-  background: var(--hover);
+.history-item:first-child {
+  border-top: 0;
 }
 
 .history-details {
+  flex: 1 1 auto;
   min-width: 0;
 }
 
-.history-title {
+.history-title,
+.history-quote {
   overflow: hidden;
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.history-meta {
-  overflow: hidden;
-  margin-top: 4px;
+.history-title {
+  font-weight: 600;
+}
+
+.history-quote,
+.history-time {
   color: var(--muted);
-  direction: rtl;
   font-size: 12px;
-  line-height: 1.35;
-  text-align: left;
-  text-overflow: ellipsis;
-  unicode-bidi: plaintext;
-  white-space: nowrap;
 }
 
 .history-time {
   display: block;
-  margin-top: 3px;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.35;
 }
 
 .history-actions {
   display: flex;
-  align-items: start;
-  gap: 4px;
+  flex: 0 0 auto;
+  gap: 2px;
 }
 
-.visit-button,
-.copy-button,
-.delete-button {
-  height: 28px;
-  border: 0;
-  border-radius: 4px;
-  padding: 0 8px;
-  background: transparent;
-  cursor: pointer;
+.button.small {
+  height: 24px;
+  padding: 0 6px;
+  border-color: transparent;
   font-size: 12px;
 }
 
-.visit-button,
-.copy-button {
-  color: var(--blue);
+.button.small:hover {
+  border-color: var(--border);
 }
 
-.delete-button {
+.button.danger {
   color: var(--danger);
-}
-
-.visit-button:hover,
-.copy-button:hover,
-.delete-button:hover {
-  background: rgba(60, 64, 67, 0.1);
-}
-
-.visit-button:focus-visible,
-.copy-button:focus-visible,
-.delete-button:focus-visible {
-  outline: 2px solid var(--blue);
-  outline-offset: 2px;
 }

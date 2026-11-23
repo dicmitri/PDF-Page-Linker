@@ -2,45 +2,34 @@
   "manifest_version": 3,
   "name": "PDF Page Linker",
   "short_name": "PDF Linker",
-  "version": "1.0.0",
-  "description": "A clean PDF viewer that copies direct links to the current PDF page.",
-  "minimum_chrome_version": "128",
+  "version": "2.0.0",
+  "description": "Select text in a PDF, right-click, and copy a link to that page or passage. Works with Chrome's own PDF viewer.",
+  "minimum_chrome_version": "127",
   "permissions": [
-    "declarativeNetRequest",
-    "downloads",
-    "storage",
-    "tabs"
-  ],
-  "host_permissions": [
-    "http://*/*",
-    "https://*/*"
+    "activeTab",
+    "contextMenus",
+    "offscreen",
+    "scripting",
+    "storage"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "action": {
-    "default_title": "Link history",
-    "default_popup": "popup.html"
-  },
-  "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; worker-src 'self';"
-  },
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "viewer.html",
-        "viewer.css",
-        "viewer.js",
-        "pdfjs/build/*",
-        "pdfjs/cmaps/*",
-        "pdfjs/iccs/*",
-        "pdfjs/standard_fonts/*",
-        "pdfjs/wasm/*"
-      ],
-      "matches": [
-        "http://*/*",
-        "https://*/*"
-      ]
+    "default_title": "PDF Page Linker",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
     }
-  ]
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
 }

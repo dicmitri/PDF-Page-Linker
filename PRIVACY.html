@@ -1,15 +1,118 @@
-# Privacy Notice
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PDF Page Linker: Privacy Policy</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --text: #202124;
+        --muted: #5f6368;
+        --bg: #ffffff;
+        --rule: #dadce0;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --text: #e8eaed;
+          --muted: #9aa0a6;
+          --bg: #202124;
+          --rule: #3c4043;
+        }
+      }
+      body {
+        max-width: 42rem;
+        margin: 0 auto;
+        padding: 2rem 1rem 3rem;
+        color: var(--text);
+        background: var(--bg);
+        font: 16px/1.6 system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+      }
+      h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+      h2 { font-size: 1.15rem; margin-top: 2rem; border-top: 1px solid var(--rule); padding-top: 1.25rem; }
+      .updated { color: var(--muted); margin-top: 0; }
+      code { font-size: 0.9em; }
+    </style>
+  </head>
+  <body>
+    <h1>PDF Page Linker: Privacy Policy</h1>
+    <p class="updated">Last updated: 23 November 2026 (version 2.0)</p>
 
-This extension stores copied PDF page links locally in Chrome extension storage.
+    <p>
+      PDF Page Linker copies links to a page or passage of a PDF you are reading.
+      Everything it does happens on your device. It has no servers, no accounts,
+      no analytics, no advertising and no tracking, and it never sends anything
+      you read or copy to its developer or to anyone else.
+    </p>
 
-Stored history entries contain:
+    <h2>What the extension reads</h2>
+    <p>
+      Only when you choose one of its items from the right-click menu, the
+      extension receives the text you selected and the address of the PDF. To
+      find which page that text is on, it downloads that same PDF from the
+      website you are viewing, just as your browser did to display it, and
+      extracts the PDF's text on your device. The download uses your browser's
+      existing cookies for that website, so PDFs you can already see keep working.
+    </p>
+    <p>
+      The PDF's text is kept in memory for up to three recently used PDFs, so
+      further links are instant. It is never written to disk or sent anywhere,
+      and it is discarded when the browser closes.
+    </p>
+    <p>
+      The extension does not read pages you haven't asked it to, and it has no
+      permanent access to any website.
+    </p>
 
-- PDF URL
-- Page number
-- PDF filename
-- Copied page link
-- Copy timestamp
+    <h2>What is stored on your device</h2>
+    <p>Each link you copy is saved in the extension's local storage (<code>chrome.storage.local</code>) with:</p>
+    <ul>
+      <li>the PDF's address and file name;</li>
+      <li>the page number;</li>
+      <li>the copied link;</li>
+      <li>the date and time you copied it;</li>
+      <li>for passage links, the selected text (up to 240 characters).</li>
+    </ul>
+    <p>
+      The result of the most recent right-click, including the selected text, is
+      also kept in session storage (<code>chrome.storage.session</code>) so the
+      popup can show it. Chrome clears session storage when the browser closes.
+    </p>
 
-The extension does not send this history to any external server and does not include analytics or tracking code. PDF files are fetched from the URLs opened by the user so they can be rendered in the viewer.
+    <h2>Network access</h2>
+    <p>
+      The only network request the extension makes is downloading the PDF you
+      right-clicked in, from the website it came from. It contacts no other server.
+    </p>
 
-Deleting an entry from the popup removes that local history entry. Removing the extension or clearing its extension storage removes the stored history.
+    <h2>Deleting your data</h2>
+    <p>
+      Use <strong>Delete</strong> next to a link in the extension's popup to
+      remove it from the history. Removing the extension deletes all of its
+      stored data.
+    </p>
+
+    <h2>Permissions</h2>
+    <ul>
+      <li><strong>contextMenus</strong>: show the right-click items.</li>
+      <li><strong>activeTab</strong>: temporary access to the current tab's website, granted only when you click one of the extension's items, used to download the PDF.</li>
+      <li><strong>offscreen</strong>: run the PDF text extraction in a hidden extension page.</li>
+      <li><strong>scripting</strong>: copy the link to your clipboard from the current tab.</li>
+      <li><strong>storage</strong>: keep your link history on your device.</li>
+    </ul>
+
+    <h2>Third parties</h2>
+    <p>
+      The extension bundles the open-source PDF.js library by Mozilla to read PDF
+      text locally. PDF.js runs inside the extension and does not contact any
+      server.
+    </p>
+
+    <h2>Changes</h2>
+    <p>
+      If this policy changes, the new version will be published here with a new
+      date. Version 1 of the extension stored the same history fields, except
+      the selected text.
+    </p>
+  </body>
+</html>
