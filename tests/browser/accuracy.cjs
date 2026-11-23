@@ -157,6 +157,8 @@ async function dragSelect(viewer, rect, [x1base, y1, x2, y2]) {
 }
 
 async function main() {
+  // Open links exactly as the extension builds them.
+  const { buildLink } = await import(path.join(EXTENSION, "linkformat.js"));
   const documents = process.env.ONLY ? DOCUMENTS.filter(([name]) => name === process.env.ONLY) : DOCUMENTS;
   await ensurePdfs(documents);
   fs.mkdirSync(RESULTS_DIR, { recursive: true });
@@ -217,7 +219,7 @@ async function main() {
         for (const sample of samples) {
           if (!sample.directive) continue;
           await viewer.goto("about:blank");
-          await viewer.goto(`${BASE}/${name}#page=${pageNumber}:~:${sample.directive}`);
+          await viewer.goto(buildLink(`${BASE}/${name}`, { page: pageNumber, directive: sample.directive }));
           await sleep(settle + 500);
           const after = await analyzeScreenshot(helperPage, viewer, "pixels");
           sample.highlightPixels = after.highlight;

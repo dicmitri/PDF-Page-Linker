@@ -10,12 +10,31 @@ working as usual.
 
 ```
 Right-click a selection ─► "Copy link to this page"     ─► https://host/doc.pdf#page=12
-                         └► "Copy link to this passage" ─► https://host/doc.pdf#page=12:~:text=first%20words,last%20words
+                         └► "Copy link to this passage" ─► https://host/doc.pdf#page=12&:~:text=first%20words,last%20words
 ```
 
 Whoever opens a passage link in Chrome lands on that passage, highlighted, with
 no extension needed. If the passage can't be found, Chrome falls back to
 `page=12`. Other PDF viewers that understand `#page=` open the right page.
+
+## Where the links work
+
+Links opened without the extension (tested November 2026):
+
+| Opened in | Page link | Passage link |
+|---|---|---|
+| Chrome, Windows | ✓ right page | ✓ right page, passage highlighted |
+| Chrome, Android | ✓ right page | right page, no highlight |
+| Edge, Windows | ✓ right page | right page, no highlight |
+| Edge, Android | ✗ opens page 1 | ✗ opens page 1 |
+| Firefox, Android | ✓ right page | ✓ right page, passage highlighted¹ |
+| Safari | not tested | not tested |
+
+¹ Tested with the earlier `#page=N:~:text=` format.
+
+Edge on Android ignores page links entirely, even a plain `#page=12`, so no
+link format can fix it. The `&` before `:~:` matters: without it, Edge on
+Windows and Chrome on Android read the page as `12:~:text=…` and open page 1.
 
 ## Using it
 
@@ -128,7 +147,9 @@ mkdir -p dist && git archive --format=zip --output=dist/pdf-page-linker-2.0.0.zi
 - **Not supported yet:** `file://` PDFs, and PDFs embedded in another site's frame.
 - **The menu appears on every text selection**, because an extension can't tell
   in advance that a tab is a PDF. On normal pages it says it isn't a PDF.
-- **Firefox and Safari** haven't been tested with combined `#page=N:~:text=…` links.
+- **Edge on Android ignores page links**, and passage highlighting works only in
+  Chrome on desktop and Firefox (see [Where the links work](#where-the-links-work)).
+  Safari hasn't been tested.
 - Chrome 153's viewer has its own greyed-out "Copy link to highlight" for
   PDFs. If Google enables it, plain passage links become built in; page
   detection, the page fallback and history remain this extension's job.

@@ -1,11 +1,13 @@
 // Building shareable links.
 //
 // Page links:    https://host/file.pdf#page=12
-// Passage links: https://host/file.pdf#page=12:~:text=start%20words,end%20words
+// Passage links: https://host/file.pdf#page=12&:~:text=start%20words,end%20words
 //
 // Chrome's PDF viewer scrolls to and highlights the text directive, and falls
-// back to page=12 when the text cannot be found. Viewers that do not know text
-// fragments still get the page number.
+// back to page=12 when the text cannot be found. The "&" before ":~:" matters:
+// viewers that don't understand text directives (Edge on Windows, Chrome on
+// Android) read the whole fragment as parameters, and without it they see
+// "page=12:~:text=..." and ignore the page. With it they get a clean page=12.
 
 /** Strip any fragment (including an existing :~: directive) from a URL. */
 export function stripFragment(url) {
@@ -83,9 +85,9 @@ export function filenameFromUrl(url) {
  */
 export function buildLink(pdfUrl, { page, directive } = {}) {
   const base = stripFragment(pdfUrl);
-  let fragment = page ? `page=${page}` : "";
-  if (directive) {
-    fragment += `:~:${directive}`;
+  const params = page ? `page=${page}` : "";
+  if (!directive) {
+    return params ? `${base}#${params}` : base;
   }
-  return fragment ? `${base}#${fragment}` : base;
+  return `${base}#${params ? `${params}&` : ""}:~:${directive}`;
 }

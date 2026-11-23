@@ -25,10 +25,12 @@ test("text directive with prefix, range and suffix", () => {
 test("links replace any existing fragment, including a :~: directive", () => {
   assert.equal(stripFragment("https://x.org/a.pdf#page=3:~:text=old"), "https://x.org/a.pdf");
   assert.equal(buildLink("https://x.org/a.pdf#page=3", { page: 12 }), "https://x.org/a.pdf#page=12");
+  // "&" keeps page=12 readable for viewers that don't understand ":~:".
   assert.equal(
     buildLink("https://x.org/a.pdf?dl=1", { page: 12, directive: "text=hello" }),
-    "https://x.org/a.pdf?dl=1#page=12:~:text=hello"
+    "https://x.org/a.pdf?dl=1#page=12&:~:text=hello"
   );
+  assert.equal(new URLSearchParams(buildLink("https://x.org/a.pdf", { page: 7, directive: "text=a" }).split("#")[1]).get("page"), "7");
   assert.equal(buildLink("https://x.org/a.pdf", { directive: "text=hello" }), "https://x.org/a.pdf#:~:text=hello");
 });
 

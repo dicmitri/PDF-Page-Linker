@@ -32,7 +32,7 @@
   > • Page links (`…/file.pdf#page=12`) open on the right page in any PDF viewer
   >   that supports page links.
   > • Passage links open in Chrome scrolled to the passage, highlighted. Recipients
-  >   don't need the extension.
+  >   don't need the extension, and most other browsers still open the right page.
   > • If the text appears on several pages, the extension asks which one you meant.
   > • Type a page number in the popup to link to any page directly.
   > • Your recent links are kept on your device, with Open, Copy and Delete.
@@ -84,6 +84,8 @@ visible in the popup (same storage key).
   - a common word → popup asks which page; a very common word → "select a longer passage";
   - popup: Link to a page, recent links Open / Copy / Delete;
   - a normal web page → "This page isn't a PDF".
+- Open a copied page link and a passage link in a new tab in other browsers;
+  expected results are in the README's "Where the links work" table.
 
 ## References
 
